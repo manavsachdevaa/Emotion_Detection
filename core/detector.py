@@ -27,6 +27,7 @@ def process_frame(frame):
     faces = face_cascade.detectMultiScale(gray, 1.2, 5)
 
     if len(faces) == 0:
+        print("No face detected")
         return frame_small
 
     (x, y, w, h) = max(faces, key=lambda f: f[2]*f[3])
