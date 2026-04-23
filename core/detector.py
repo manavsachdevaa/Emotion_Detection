@@ -1,4 +1,5 @@
 # Emotion Detection using Deep Learning
+# This file handles real-time emotion detection using DeepFace and OpenCV
 import cv2
 import numpy as np
 from deepface import DeepFace
