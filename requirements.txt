@@ -1,4 +1,13 @@
+streamlit
 opencv-python
-tensorflow
 numpy
 deepface
+tensorflow==2.12.0
+keras==2.12.0
+mtcnn
+retina-face
+gdown
+pandas
+tqdm
+Pillow
+plotly
