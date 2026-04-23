@@ -14,6 +14,7 @@ frame_count = 0
 
 emotion_history = []
 
+# Processes each video frame and detects dominant emotion
 def process_frame(frame):
     global last_emotion, last_confidence, frame_count, emotion_history
 
