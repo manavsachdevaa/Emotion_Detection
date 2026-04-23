@@ -118,9 +118,9 @@ This project is open-source and free to use.
 
 ## 👨‍💻 Author
 
-Manav Sachdeva 
-Kratika Gupta
-Kishan Kumar Kasaudhan
+Manav Sachdeva,
+Kratika Gupta,
+Kishan Kumar Kasaudhan,
 Harsh Vardhan Srivastava
 
 ---
