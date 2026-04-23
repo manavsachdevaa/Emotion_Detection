@@ -23,7 +23,7 @@ def process_frame(frame):
 
     frame_small = cv2.resize(frame, (320, 240))
     gray = cv2.cvtColor(frame_small, cv2.COLOR_BGR2GRAY)
-
+    # Detect faces in grayscale frame
     faces = face_cascade.detectMultiScale(gray, 1.2, 5)
 
     if len(faces) == 0:
