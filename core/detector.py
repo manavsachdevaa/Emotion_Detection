@@ -54,6 +54,7 @@ def process_frame(frame):
 
     if len(emotion_history) == 0:
         return frame_small
+    # Calculate average emotions over last few frames for stability
     avg_emotions = {}
 
     for key in emotion_history[0].keys():
