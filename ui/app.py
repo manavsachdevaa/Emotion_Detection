@@ -5,7 +5,6 @@ import os
 import time
 import numpy as np
 import plotly.graph_objects as go
-import random  # Remove this if your model provides real scores
 
 # ================= FIX IMPORT PATH =================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -27,13 +26,23 @@ def get_emotion_scores(frame):
 
 # ================= EMOTION PALETTE =================
 EMOTION_COLORS = {
-    "Happy":     "#FFD166",
-    "Sad":       "#118AB2",
-    "Angry":     "#EF476F",
-    "Surprised": "#06D6A0",
-    "Neutral":   "#A8DADC",
-    "Fearful":   "#9B5DE5",
-    "Disgusted": "#F4845F",
+    "Happy":     "#FBBF24",
+    "Sad":       "#60A5FA",
+    "Angry":     "#F87171",
+    "Surprised": "#34D399",
+    "Neutral":   "#94A3B8",
+    "Fearful":   "#C084FC",
+    "Disgusted": "#FB923C",
+}
+
+EMOTION_GLOW = {
+    "Happy":     "#FBBF2455",
+    "Sad":       "#60A5FA55",
+    "Angry":     "#F8717155",
+    "Surprised": "#34D39955",
+    "Neutral":   "#94A3B855",
+    "Fearful":   "#C084FC55",
+    "Disgusted": "#FB923C55",
 }
 
 # ================= PAGE CONFIG =================
@@ -47,130 +56,197 @@ st.set_page_config(
 # ================= GLOBAL CSS =================
 st.markdown("""
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
 
   html, body, [class*="css"] {
-    font-family: 'DM Sans', sans-serif;
-    background-color: #0d0f14;
-    color: #e8eaf0;
+    font-family: 'Inter', sans-serif;
+    background-color: #070b14;
+    color: #e2e8f0;
   }
 
   /* Hide default Streamlit chrome */
   #MainMenu, footer, header { visibility: hidden; }
 
+  /* Subtle grid background */
+  .stApp {
+    background-color: #070b14;
+    background-image:
+      linear-gradient(rgba(99, 102, 241, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(99, 102, 241, 0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
   /* Top banner */
   .banner {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 20px 0 8px 0;
-    border-bottom: 1px solid #1e2130;
-    margin-bottom: 24px;
+    gap: 16px;
+    padding: 24px 0 16px 0;
+    margin-bottom: 28px;
+    border-bottom: 1px solid rgba(99, 102, 241, 0.2);
   }
-  .banner-icon {
-    font-size: 2.4rem;
-    line-height: 1;
+  .banner-icon-wrap {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem;
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.45);
   }
   .banner-title {
     font-family: 'Space Mono', monospace;
-    font-size: 1.55rem;
+    font-size: 1.6rem;
     font-weight: 700;
-    color: #ffffff;
+    background: linear-gradient(90deg, #a78bfa, #67e8f9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     letter-spacing: -0.5px;
   }
   .banner-sub {
-    font-size: 0.82rem;
-    color: #6b7280;
-    margin-top: 2px;
-    letter-spacing: 0.4px;
+    font-size: 0.78rem;
+    color: #64748b;
+    margin-top: 3px;
+    letter-spacing: 0.8px;
     text-transform: uppercase;
+  }
+  .banner-badge {
+    margin-left: auto;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    font-size: 0.72rem;
+    color: #a78bfa;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.6px;
+    white-space: nowrap;
   }
 
-  /* Metric pill */
+  /* Glass card */
+  .glass-card {
+    background: rgba(15, 20, 35, 0.7);
+    border: 1px solid rgba(99, 102, 241, 0.18);
+    border-radius: 16px;
+    backdrop-filter: blur(12px);
+    padding: 20px;
+  }
+
+  /* Metric card */
   .metric-card {
-    background: #161922;
-    border: 1px solid #1e2130;
-    border-radius: 12px;
-    padding: 16px 20px;
+    background: rgba(15, 20, 35, 0.8);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 14px;
+    padding: 16px 12px;
     text-align: center;
+    transition: border-color 0.2s;
+  }
+  .metric-card:hover {
+    border-color: rgba(167, 139, 250, 0.45);
   }
   .metric-label {
-    font-size: 0.72rem;
-    color: #6b7280;
+    font-size: 0.68rem;
+    color: #64748b;
     text-transform: uppercase;
-    letter-spacing: 0.8px;
+    letter-spacing: 1px;
   }
   .metric-value {
     font-family: 'Space Mono', monospace;
-    font-size: 1.5rem;
+    font-size: 1.45rem;
     font-weight: 700;
-    color: #f9fafb;
+    background: linear-gradient(90deg, #a78bfa, #67e8f9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     margin-top: 4px;
-  }
-  .metric-accent { color: #FFD166; }
-
-  /* Emotion badge */
-  .emotion-badge {
-    display: inline-block;
-    padding: 6px 18px;
-    border-radius: 999px;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.9rem;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    margin-top: 8px;
-    background: #FFD16622;
-    color: #FFD166;
-    border: 1px solid #FFD16655;
   }
 
   /* Section heading */
   .section-title {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.72rem;
-    color: #6b7280;
+    font-size: 0.68rem;
+    color: #64748b;
     text-transform: uppercase;
-    letter-spacing: 1.2px;
-    margin-bottom: 10px;
+    letter-spacing: 1.4px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(99, 102, 241, 0.15);
   }
 
   /* Divider */
-  .divider { border-top: 1px solid #1e2130; margin: 18px 0; }
+  .divider { border-top: 1px solid rgba(99, 102, 241, 0.12); margin: 20px 0; }
 
-  /* Status dot */
+  /* Live status */
   .status-dot {
     display: inline-block;
     width: 8px; height: 8px;
     border-radius: 50%;
-    background: #10b981;
-    box-shadow: 0 0 6px #10b981;
-    margin-right: 6px;
+    background: #34d399;
+    box-shadow: 0 0 8px #34d399, 0 0 16px #34d39944;
+    margin-right: 7px;
     animation: pulse 1.4s infinite;
   }
   @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0.35; }
+    0%, 100% { opacity: 1; box-shadow: 0 0 8px #34d399, 0 0 16px #34d39944; }
+    50%       { opacity: 0.5; box-shadow: 0 0 4px #34d399; }
   }
   .status-text {
-    font-size: 0.78rem;
-    color: #10b981;
+    font-size: 0.76rem;
+    color: #34d399;
     font-family: 'Space Mono', monospace;
     vertical-align: middle;
+    letter-spacing: 0.6px;
+  }
+  .status-idle {
+    font-size: 0.76rem;
+    color: #475569;
+    font-family: 'Space Mono', monospace;
   }
 
-  /* Plotly chart background */
+  /* Idle placeholder */
+  .idle-box {
+    background: rgba(15, 20, 35, 0.7);
+    border: 1px dashed rgba(99, 102, 241, 0.2);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 360px;
+    gap: 14px;
+  }
+  .idle-icon { font-size: 3.2rem; filter: grayscale(30%); }
+  .idle-text {
+    font-family: 'Space Mono', monospace;
+    color: #334155;
+    font-size: 0.82rem;
+    letter-spacing: 0.4px;
+  }
+
+  /* Plotly chart */
   .js-plotly-plot .plotly { background: transparent !important; }
+
+  /* Streamlit toggle styling */
+  .stToggle > label {
+    color: #a78bfa !important;
+    font-weight: 500;
+  }
 </style>
 """, unsafe_allow_html=True)
 
 # ================= BANNER =================
 st.markdown("""
 <div class="banner">
-  <div class="banner-icon">🧠</div>
+  <div class="banner-icon-wrap">🧠</div>
   <div>
     <div class="banner-title">Emotion Detector</div>
     <div class="banner-sub">Hybrid Model · Real-Time · Computer Vision</div>
   </div>
+  <div class="banner-badge">⚡ Live Analysis</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -180,9 +256,9 @@ left_col, right_col = st.columns([3, 2], gap="large")
 # ---- LEFT: Camera feed ----
 with left_col:
     st.markdown('<div class="section-title">Live Feed</div>', unsafe_allow_html=True)
-    frame_window   = st.empty()
-    status_area    = st.empty()
-    run            = st.toggle("▶  Start Camera", value=False)
+    frame_window = st.empty()
+    status_area  = st.empty()
+    run          = st.toggle("▶  Start Camera", value=False)
 
 # ---- RIGHT: Analytics panel ----
 with right_col:
@@ -204,6 +280,7 @@ with right_col:
     st.markdown('<div class="section-title">Distribution</div>', unsafe_allow_html=True)
     chart_area = st.empty()
 
+
 # ================= HELPERS =================
 def render_bar_chart(scores: dict):
     emotions = list(scores.keys())
@@ -216,44 +293,48 @@ def render_bar_chart(scores: dict):
         orientation="h",
         marker=dict(
             color=colors,
+            opacity=0.85,
             line=dict(width=0),
         ),
         text=[f"{v:.1f}%" for v in values],
         textposition="outside",
-        textfont=dict(color="#9ca3af", size=11, family="Space Mono"),
+        textfont=dict(color="#64748b", size=11, family="Space Mono"),
         hovertemplate="%{y}: %{x:.1f}%<extra></extra>",
     ))
 
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        margin=dict(l=0, r=50, t=4, b=4),
-        height=280,
+        margin=dict(l=0, r=55, t=4, b=4),
+        height=290,
         xaxis=dict(
-            range=[0, 105],
+            range=[0, 110],
             showgrid=False,
             zeroline=False,
             showticklabels=False,
         ),
         yaxis=dict(
             showgrid=False,
-            tickfont=dict(color="#d1d5db", size=12, family="DM Sans"),
+            tickfont=dict(color="#94a3b8", size=12, family="Inter"),
             autorange="reversed",
         ),
-        bargap=0.28,
-        font=dict(color="#e8eaf0"),
+        bargap=0.3,
+        font=dict(color="#e2e8f0"),
     )
     return fig
 
 
-def render_top_emotion(name, pct, color):
+def render_top_emotion(name, pct, color, glow):
+    emoji = emotion_emoji(name)
     return f"""
-    <div style="text-align:center; padding: 14px 0 6px 0;">
-      <div style="font-size:2.6rem; line-height:1.1;">{emotion_emoji(name)}</div>
-      <div style="font-family:'Space Mono',monospace; font-size:1.35rem; font-weight:700;
-                  color:{color}; margin-top:8px;">{name}</div>
-      <div style="font-size:0.82rem; color:#6b7280; margin-top:4px;">
-        Confidence: <span style="color:{color}; font-weight:600;">{pct:.1f}%</span>
+    <div style="text-align:center; padding: 18px 0 8px 0;">
+      <div style="font-size:3.2rem; line-height:1; filter: drop-shadow(0 0 12px {color}88);">{emoji}</div>
+      <div style="font-family:'Space Mono',monospace; font-size:1.4rem; font-weight:700;
+                  color:{color}; margin-top:12px; text-shadow: 0 0 20px {color}66;">{name}</div>
+      <div style="display:inline-block; margin-top:10px; padding:5px 16px;
+                  border-radius:999px; background:{glow};
+                  border:1px solid {color}55; font-size:0.82rem; color:{color}; font-weight:600;">
+        {pct:.1f}% confidence
       </div>
     </div>
     """
@@ -303,19 +384,19 @@ if run:
 
         elapsed = time.time() - t0
         fps     = 1.0 / elapsed if elapsed > 0 else 0
-        total_s = time.time() - t_start
 
         # Sort by score descending
-        scores = dict(sorted(scores.items(), key=lambda x: x[1], reverse=True))
-        top_name = list(scores.keys())[0]
-        top_pct  = list(scores.values())[0] * 100
-        top_color = EMOTION_COLORS.get(top_name, "#FFD166")
+        scores    = dict(sorted(scores.items(), key=lambda x: x[1], reverse=True))
+        top_name  = list(scores.keys())[0]
+        top_pct   = list(scores.values())[0] * 100
+        top_color = EMOTION_COLORS.get(top_name, "#a78bfa")
+        top_glow  = EMOTION_GLOW.get(top_name, "#a78bfa33")
 
         # ── Update UI ──────────────────────────────
         frame_window.image(processed_frame, channels="BGR", use_container_width=True)
 
         top_emotion_area.markdown(
-            render_top_emotion(top_name, top_pct, top_color),
+            render_top_emotion(top_name, top_pct, top_color, top_glow),
             unsafe_allow_html=True,
         )
 
@@ -334,18 +415,14 @@ if run:
 else:
     # Idle state
     frame_window.markdown("""
-    <div style="background:#161922; border:1px solid #1e2130; border-radius:16px;
-                display:flex; flex-direction:column; align-items:center;
-                justify-content:center; height:360px; gap:12px;">
-      <div style="font-size:3rem;">📷</div>
-      <div style="font-family:'Space Mono',monospace; color:#4b5563; font-size:0.85rem;">
-        Toggle the switch to start
-      </div>
+    <div class="idle-box">
+      <div class="idle-icon">📷</div>
+      <div class="idle-text">Toggle the switch to start</div>
     </div>
     """, unsafe_allow_html=True)
 
     status_area.markdown(
-        '<span style="font-size:0.78rem; color:#4b5563; font-family:\'Space Mono\',monospace;">● IDLE</span>',
+        '<span class="status-idle">● IDLE</span>',
         unsafe_allow_html=True,
     )
 
